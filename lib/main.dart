@@ -1,11 +1,12 @@
+import 'package:comic_short_forms/core/locator/service_locator.dart';
 import 'package:comic_short_forms/core/router/router.dart';
-import 'package:comic_short_forms/features/main/presentation/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() async {
   await dotenv.load(fileName: 'assets/.env');
+  setupLocator();
   runApp(const ProviderScope(child: MyApp()));
 }
 
