@@ -1,4 +1,5 @@
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
+import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:comic_short_forms/features/comics/presentation/artwork_page_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -16,12 +17,67 @@ class ComicsShortsWidget extends StatefulWidget {
 class _ComicsShortsWidgetState extends State<ComicsShortsWidget> {
   bool _isInfoVisible = false;
   bool _isEnd = false;
+
+  int _currentArtworkIdx = 0;
+  int _currentEpisodeIdx = 0;
+  int _currentPageIdx = 0;
+
+  Artwork? get _currentArtwork => _currentArtworkIdx < widget.artworks.length
+      ? widget.artworks[_currentArtworkIdx]
+      : null;
+  Episode? get _currentEpisode =>
+      _currentEpisodeIdx < (_currentArtwork?.episodes.length ?? 0)
+      ? _currentArtwork?.episodes[_currentEpisodeIdx]
+      : null;
+  String get _currentPage =>
+      _currentPageIdx < (_currentEpisode?.imageUrls.length ?? 0)
+      ? _currentEpisode?.imageUrls[_currentPageIdx] ?? ''
+      : '';
+
   Artwork? _endedArtwork;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   // 정보창 토글 메서드
   void _toggleInfoVisibility() {
     setState(() {
       _isInfoVisible = !_isInfoVisible;
+    });
+  }
+
+  void _onArtworkChanged(int nextIdx) {
+    if (nextIdx < 0 || nextIdx >= widget.artworks.length) return;
+    setState(() {
+      _currentArtworkIdx = nextIdx;
+      _currentEpisodeIdx = 0;
+      _currentPageIdx = 0;
+    },);
+  }
+
+  void _onEpisodeChanged(int nextIdx) {
+    if (nextIdx < 0 || nextIdx >= (_currentArtwork?.episodes.length ?? -1)) return;
+    setState(() {
+      _currentEpisodeIdx = nextIdx;
+      _currentPageIdx = 0;
+    });
+  }
+
+  void _handleNextPage() {
+    // 다음 페이지 없는 경우
+    if ((_currentEpisode?.imageUrls.length ?? -1) <= _currentPageIdx + 1) return;
+    setState(() {
+      _currentPageIdx++;
+    });
+  }
+
+  void _handlePrevPage() {
+    // 이전 페이지 없는 경우
+    if (_currentPageIdx - 1 < 0) return;
+    setState(() {
+      _currentPageIdx--;
     });
   }
 
@@ -34,28 +90,21 @@ class _ComicsShortsWidgetState extends State<ComicsShortsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.artworks.isEmpty) return SizedBox();
     return Stack(
       fit: StackFit.expand,
       children: [
         ShortsFormWidget(
           artworks: widget.artworks,
-          onChangeEpisodeImage: _onChangeEpisodeImage,
+          currentPage: _currentPage,
+          onArtworkChanged: _onArtworkChanged,
+          onEpisodeChanged: _onEpisodeChanged,
         ),
         Visibility(visible: _isInfoVisible, child: InformationWidget()),
-        GestureDetector(
-          child: Center(
-            child: GestureDetector(
-              onTap: _toggleInfoVisibility,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.transparent,
-                ),
-              ),
-            ),
-          ),
+        ShortsFormInteractionWidget(
+          toggleInfoVisibility: _toggleInfoVisibility,
+          handleNextPage: _handleNextPage,
+          handlePrevPage: _handlePrevPage,
         ),
         if (_endedArtwork != null)
           Visibility(
@@ -111,35 +160,89 @@ class InformationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(color: Colors.blue);
+    return Container(color: Colors.blue,
+    child: Center(child: Text('정보 표시 레이아웃', style: TextStyle(fontSize: 20),),),);
+  }
+}
+
+/// 사용자 터치 감지 위젯
+class ShortsFormInteractionWidget extends StatelessWidget {
+  const ShortsFormInteractionWidget({
+    super.key,
+    this.toggleInfoVisibility,
+    this.handleNextPage,
+    this.handlePrevPage,
+  });
+
+  /// 정보 위젯 표시 콜백
+  final void Function()? toggleInfoVisibility;
+  final void Function()? handleNextPage;
+  final void Function()? handlePrevPage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Row(
+          children: [
+            Expanded(child: GestureDetector(onTap: handlePrevPage)),
+            Expanded(child: GestureDetector(onTap: handleNextPage)),
+          ],
+        ),
+        GestureDetector(
+          child: Center(
+            child: GestureDetector(
+              onTap: toggleInfoVisibility,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
 /// 만화형 숏폼 위젯
+///
 /// 세로 방향 스크롤 : 새로운 만화
+///
 /// 가로 방향 스크롤 : 다음화
+///
 /// 순수 이미지만 표시하는 위젯
 class ShortsFormWidget extends StatelessWidget {
   final List<Artwork> artworks;
   const ShortsFormWidget({
     super.key,
     required this.artworks,
-    required this.onChangeEpisodeImage,
+    required this.currentPage,
+    this.onArtworkChanged,
+    this.onEpisodeChanged,
   });
-  final Function(bool, Artwork)? onChangeEpisodeImage;
-
+  final void Function(int)? onArtworkChanged;
+  final void Function(int)? onEpisodeChanged;
+  final String currentPage;
+  
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       child: PageView.builder(
         itemCount: artworks.length,
         scrollDirection: Axis.vertical,
+        onPageChanged: onArtworkChanged,
         itemBuilder: (context, index) {
           final artwork = artworks[index];
           // 3. 수평 방향 Carousel을 가진 위젯
           return ArtworkPageWidget(
             artwork: artwork,
-            onChangeEpisodeImage: onChangeEpisodeImage,
+            onEpisodeChanged: onEpisodeChanged,
+            currentPage: currentPage,
           );
         },
       ),
