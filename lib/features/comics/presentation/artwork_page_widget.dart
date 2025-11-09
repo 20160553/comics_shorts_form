@@ -43,8 +43,6 @@ class _EpisodePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // (간단한 예시) 해당 '화'의 첫 번째 이미지만 표시
-    // TODO: episode.imageUrls를 사용해 컷툰처럼 구현
     return Column(
       children: [
         // (임시) 화 정보

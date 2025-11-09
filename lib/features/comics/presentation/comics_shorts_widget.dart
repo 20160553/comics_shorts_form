@@ -1,115 +1,43 @@
+import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
-import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:comic_short_forms/features/comics/presentation/artwork_page_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 코믹 숏폼
 /// 만화를 표시하는 [ShortsFormWidget]
 /// 기타 정보를 표시하는 [InformationWidget]
-class ComicsShortsWidget extends StatefulWidget {
+class ComicsShortsWidget extends ConsumerWidget {
   final List<Artwork> artworks;
   const ComicsShortsWidget({super.key, required this.artworks});
 
   @override
-  State<ComicsShortsWidget> createState() => _ComicsShortsWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uiProvider = comicsShortsUiProvider(artworks);
 
-class _ComicsShortsWidgetState extends State<ComicsShortsWidget> {
-  bool _isInfoVisible = false;
-  bool _isEnd = false;
+    final uiState = ref.watch(uiProvider);
+    final uiNotifier = ref.read(uiProvider.notifier);
 
-  int _currentArtworkIdx = 0;
-  int _currentEpisodeIdx = 0;
-  int _currentPageIdx = 0;
-
-  Artwork? get _currentArtwork => _currentArtworkIdx < widget.artworks.length
-      ? widget.artworks[_currentArtworkIdx]
-      : null;
-  Episode? get _currentEpisode =>
-      _currentEpisodeIdx < (_currentArtwork?.episodes.length ?? 0)
-      ? _currentArtwork?.episodes[_currentEpisodeIdx]
-      : null;
-  String get _currentPage =>
-      _currentPageIdx < (_currentEpisode?.imageUrls.length ?? 0)
-      ? _currentEpisode?.imageUrls[_currentPageIdx] ?? ''
-      : '';
-
-  Artwork? _endedArtwork;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  // 정보창 토글 메서드
-  void _toggleInfoVisibility() {
-    setState(() {
-      _isInfoVisible = !_isInfoVisible;
-    });
-  }
-
-  void _onArtworkChanged(int nextIdx) {
-    if (nextIdx < 0 || nextIdx >= widget.artworks.length) return;
-    setState(() {
-      _currentArtworkIdx = nextIdx;
-      _currentEpisodeIdx = 0;
-      _currentPageIdx = 0;
-    },);
-  }
-
-  void _onEpisodeChanged(int nextIdx) {
-    if (nextIdx < 0 || nextIdx >= (_currentArtwork?.episodes.length ?? -1)) return;
-    setState(() {
-      _currentEpisodeIdx = nextIdx;
-      _currentPageIdx = 0;
-    });
-  }
-
-  void _handleNextPage() {
-    // 다음 페이지 없는 경우
-    if ((_currentEpisode?.imageUrls.length ?? -1) <= _currentPageIdx + 1) return;
-    setState(() {
-      _currentPageIdx++;
-    });
-  }
-
-  void _handlePrevPage() {
-    // 이전 페이지 없는 경우
-    if (_currentPageIdx - 1 < 0) return;
-    setState(() {
-      _currentPageIdx--;
-    });
-  }
-
-  void _onChangeEpisodeImage(bool isEnd, Artwork artwork) {
-    setState(() {
-      _isEnd = isEnd;
-      _endedArtwork = artwork;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.artworks.isEmpty) return SizedBox();
+    if (artworks.isEmpty) return SizedBox();
     return Stack(
       fit: StackFit.expand,
       children: [
         ShortsFormWidget(
-          artworks: widget.artworks,
-          currentPage: _currentPage,
-          onArtworkChanged: _onArtworkChanged,
-          onEpisodeChanged: _onEpisodeChanged,
+          artworks: artworks,
+          currentPage: uiState.currentPage,
+          onArtworkChanged: uiNotifier.onArtworkChanged,
+          onEpisodeChanged: uiNotifier.onEpisodeChanged,
         ),
-        Visibility(visible: _isInfoVisible, child: InformationWidget()),
+        Visibility(visible: uiState.isInfoVisible, child: InformationWidget()),
         ShortsFormInteractionWidget(
-          toggleInfoVisibility: _toggleInfoVisibility,
-          handleNextPage: _handleNextPage,
-          handlePrevPage: _handlePrevPage,
+          toggleInfoVisibility: uiNotifier.toggleInfoVisibility,
+          handleNextPage: uiNotifier.handleNextPage,
+          handlePrevPage: uiNotifier.handlePrevPage,
         ),
-        if (_endedArtwork != null)
+        if (uiState.endedArtwork != null)
           Visibility(
-            visible: _isEnd,
-            child: _ArtworkInfoPage(artwork: _endedArtwork!),
+            visible: uiState.isEnd,
+            child: _ArtworkInfoPage(artwork: uiState.endedArtwork!),
           ),
       ],
     );
