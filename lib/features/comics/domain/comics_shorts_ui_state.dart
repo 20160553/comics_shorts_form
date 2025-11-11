@@ -12,7 +12,12 @@ abstract class ComicsShortsUiState with _$ComicsShortsUiState {
     required int currentArtworkIdx,
     required int currentEpisodeIdx,
     required int currentPageIdx,
-    required bool isInfoVisible,
+    @Default(false)
+    bool isInfoVisible,
+    @Default(false)
+    bool isDescriptionExpanded,
+    @Default(false)
+    bool isCommentOpend,
     required bool isEnd,
     @Default(null) Artwork? endedArtwork,
   }) = _ComicsShortsUiState;

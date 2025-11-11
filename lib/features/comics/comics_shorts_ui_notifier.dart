@@ -36,7 +36,7 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
     state = state.copyWith(currentEpisodeIdx: nextIdx, currentPageIdx: 0);
   }
 
-  /// 다음 페이지 메서드  
+  /// 다음 페이지 메서드
   void handleNextPage() {
     // 다음 페이지 없는 경우
     if ((state.currentEpisode?.imageUrls.length ?? -1) <=
@@ -51,11 +51,21 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
     if (state.currentPageIdx - 1 < 0) return;
     state = state.copyWith(currentPageIdx: state.currentPageIdx - 1);
   }
-  
+
   void onChangeEpisodeImage(bool isEnd, Artwork artwork) {
-    state = state.copyWith(
-      isEnd: isEnd,
-      endedArtwork: artwork
-    );
+    state = state.copyWith(isEnd: isEnd, endedArtwork: artwork);
+  }
+
+  void onToggleInfoVisibility() {
+    state = state.copyWith(isInfoVisible: !state.isInfoVisible);
+  }
+
+  void onToggleDescriptionExpanded() {
+    state = state.copyWith(isDescriptionExpanded: !state.isDescriptionExpanded);
+  }
+
+  void onToogleCommentLayout() {
+    state = state.copyWith(isCommentOpend: !state.isCommentOpend);
+    print(state.isCommentOpend);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/presentation/artwork_page_widget.dart';
+import 'package:comic_short_forms/features/comics/presentation/comics_information_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,7 +29,10 @@ class ComicsShortsWidget extends ConsumerWidget {
           onArtworkChanged: uiNotifier.onArtworkChanged,
           onEpisodeChanged: uiNotifier.onEpisodeChanged,
         ),
-        Visibility(visible: uiState.isInfoVisible, child: InformationWidget()),
+        Visibility(visible: uiState.isInfoVisible, child: InformationWidget(
+          uiNotifier: uiNotifier,
+          uiState: uiState,
+        )),
         ShortsFormInteractionWidget(
           toggleInfoVisibility: uiNotifier.toggleInfoVisibility,
           handleNextPage: uiNotifier.handleNextPage,
@@ -51,7 +55,6 @@ class _ArtworkInfoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 요구사항 4: 다음 화가 없을 경우 (마지막 페이지)
     return Container(
       color: Colors.grey[800],
       child: Center(
@@ -77,19 +80,6 @@ class _ArtworkInfoPage extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-/// 정보 위젯
-/// 좋아요, 댓글, 작품 정보 등 표시
-/// 터치로 show/hide 토글
-class InformationWidget extends StatelessWidget {
-  const InformationWidget({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(color: Colors.blue,
-    child: Center(child: Text('정보 표시 레이아웃', style: TextStyle(fontSize: 20),),),);
   }
 }
 
