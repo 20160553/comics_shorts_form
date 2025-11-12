@@ -64,8 +64,7 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
     state = state.copyWith(isDescriptionExpanded: !state.isDescriptionExpanded);
   }
 
-  void onToogleCommentLayout() {
+  void onToggleCommentLayout() {
     state = state.copyWith(isCommentOpend: !state.isCommentOpend);
-    print(state.isCommentOpend);
   }
 }

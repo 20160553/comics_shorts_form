@@ -33,10 +33,10 @@ class ComicsShortsWidget extends ConsumerWidget {
           handleNextPage: uiNotifier.handleNextPage,
           handlePrevPage: uiNotifier.handlePrevPage,
         ),
-        Visibility(visible: uiState.isInfoVisible, child: InformationWidget(
-          uiNotifier: uiNotifier,
-          uiState: uiState,
-        )),
+        Visibility(
+          visible: uiState.isInfoVisible,
+          child: InformationWidget(artworks: artworks),
+        ),
         ShortsFormInteractionWidget(
           toggleInfoVisibility: uiNotifier.toggleInfoVisibility,
         ),
@@ -87,10 +87,7 @@ class _ArtworkInfoPage extends StatelessWidget {
 
 /// 사용자 터치 감지 위젯
 class ShortsFormInteractionWidget extends StatelessWidget {
-  const ShortsFormInteractionWidget({
-    super.key,
-    this.toggleInfoVisibility,
-  });
+  const ShortsFormInteractionWidget({super.key, this.toggleInfoVisibility});
 
   /// 정보 위젯 표시 콜백
   final void Function()? toggleInfoVisibility;
@@ -114,7 +111,6 @@ class ShortsFormInteractionWidget extends StatelessWidget {
     );
   }
 }
-
 
 /// 사용자 터치 감지 위젯
 class HandlePageInteractionWidget extends StatelessWidget {
@@ -158,7 +154,7 @@ class ShortsFormWidget extends StatelessWidget {
   final void Function(int)? onArtworkChanged;
   final void Function(int)? onEpisodeChanged;
   final String currentPage;
-  
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(

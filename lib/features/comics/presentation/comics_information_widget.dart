@@ -1,32 +1,41 @@
 import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
-import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
+import 'package:comic_short_forms/features/comics/domain/artwork.dart';
+import 'package:comic_short_forms/features/comics/presentation/widgets/icon_with_label_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 정보 위젯
 /// 좋아요, 댓글, 작품 정보 등 표시
 /// 터치로 show/hide 토글
-class InformationWidget extends StatelessWidget {
-  const InformationWidget({
-    super.key,
-    required this.uiState,
-    required this.uiNotifier,
-  });
-  final ComicsShortsUiState uiState;
-  final ComicsShortsUiNotifier uiNotifier;
+class InformationWidget extends ConsumerWidget {
+  const InformationWidget({super.key, required this.artworks});
+
+  final List<Artwork> artworks;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const iconSize = 36.0;
     const spacingValue = 8.0;
     const mockUpImageSrc =
         "https://upload.wikimedia.org/wikipedia/commons/0/05/Cat.png";
-    final currentArtwork = uiState.currentArtwork;
+
+    final uiProivder = comicsShortsUiProvider(artworks);
+    final currentArtwork = ref.watch(
+      uiProivder.select((value) => value.currentArtwork),
+    );
+    final currentEpisode = ref.watch(
+      uiProivder.select((value) => value.currentEpisode),
+    );
+    final uiNotifier = ref.read(uiProivder.notifier);
+
     if (currentArtwork == null) {
       return Center(child: Text('Something wrong!'));
     }
-    final currentEpisodeLikesCnt = '${uiState.currentEpisode?.likesCnt ?? 0}';
-    final currentEpisodeCommentsCnt =
-        '${uiState.currentEpisode?.commentsCnt ?? 0}';
+    final currentEpisodeLikesCnt = '${currentEpisode?.likesCnt ?? 0}';
+    final currentEpisodeCommentsCnt = '${currentEpisode?.commentsCnt ?? 0}';
+    final isCommentOpend = ref.watch(
+      uiProivder.select((value) => value.isCommentOpend),
+    );
 
     return Container(
       color: Colors.blue,
@@ -34,7 +43,7 @@ class InformationWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.max,
         children: [
           Visibility(
-            visible: !uiState.isCommentOpend,
+            visible: !isCommentOpend,
             child: Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -75,59 +84,22 @@ class InformationWidget extends StatelessWidget {
                 icon: Icons.comment,
                 size: iconSize,
                 label: currentEpisodeCommentsCnt,
+                onPressed: uiNotifier.onToggleCommentLayout,
               ),
-              IconWithLabelButton(
-                icon: Icons.list_alt,
-                size: iconSize,
-              ),
-              IconWithLabelButton(
-                icon: Icons.local_pizza,
-                size: iconSize,
-              ),
-              IconWithLabelButton(
-                icon: Icons.share,
-                size: iconSize,
-              ),
-              IconWithLabelButton(
-                icon: Icons.more_vert,
-                size: iconSize,
-              ),
+              IconWithLabelButton(icon: Icons.list_alt, size: iconSize),
+              IconWithLabelButton(icon: Icons.local_pizza, size: iconSize),
+              IconWithLabelButton(icon: Icons.share, size: iconSize),
+              IconWithLabelButton(icon: Icons.more_vert, size: iconSize),
             ],
           ),
           Visibility(
-            visible: uiState.isCommentOpend,
-            child: Expanded(child: Column(children: [
-                
-              ],)),
+            visible: isCommentOpend,
+            child: Expanded(child: Container(
+              color: Colors.amber,
+              child: Column(children: [
+                ],),
+            )),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class IconWithLabelButton extends StatelessWidget {
-  const IconWithLabelButton({
-    super.key,
-    required this.icon,
-    required this.size,
-    this.label = '',
-    this.onPressed,
-  });
-
-  final IconData icon;
-  final double size;
-  final String label;
-  final Function()? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      child: Column(
-        children: [
-          Icon(icon, size: size),
-          Text(label),
         ],
       ),
     );
