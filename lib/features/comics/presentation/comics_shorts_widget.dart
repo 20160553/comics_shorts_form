@@ -29,14 +29,16 @@ class ComicsShortsWidget extends ConsumerWidget {
           onArtworkChanged: uiNotifier.onArtworkChanged,
           onEpisodeChanged: uiNotifier.onEpisodeChanged,
         ),
+        HandlePageInteractionWidget(
+          handleNextPage: uiNotifier.handleNextPage,
+          handlePrevPage: uiNotifier.handlePrevPage,
+        ),
         Visibility(visible: uiState.isInfoVisible, child: InformationWidget(
           uiNotifier: uiNotifier,
           uiState: uiState,
         )),
         ShortsFormInteractionWidget(
           toggleInfoVisibility: uiNotifier.toggleInfoVisibility,
-          handleNextPage: uiNotifier.handleNextPage,
-          handlePrevPage: uiNotifier.handlePrevPage,
         ),
         if (uiState.endedArtwork != null)
           Visibility(
@@ -88,40 +90,50 @@ class ShortsFormInteractionWidget extends StatelessWidget {
   const ShortsFormInteractionWidget({
     super.key,
     this.toggleInfoVisibility,
+  });
+
+  /// 정보 위젯 표시 콜백
+  final void Function()? toggleInfoVisibility;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      child: Center(
+        child: GestureDetector(
+          onTap: toggleInfoVisibility,
+          child: Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// 사용자 터치 감지 위젯
+class HandlePageInteractionWidget extends StatelessWidget {
+  const HandlePageInteractionWidget({
+    super.key,
     this.handleNextPage,
     this.handlePrevPage,
   });
 
   /// 정보 위젯 표시 콜백
-  final void Function()? toggleInfoVisibility;
   final void Function()? handleNextPage;
   final void Function()? handlePrevPage;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Row(
       children: [
-        Row(
-          children: [
-            Expanded(child: GestureDetector(onTap: handlePrevPage)),
-            Expanded(child: GestureDetector(onTap: handleNextPage)),
-          ],
-        ),
-        GestureDetector(
-          child: Center(
-            child: GestureDetector(
-              onTap: toggleInfoVisibility,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.transparent,
-                ),
-              ),
-            ),
-          ),
-        ),
+        Expanded(child: GestureDetector(onTap: handlePrevPage)),
+        Expanded(child: GestureDetector(onTap: handleNextPage)),
       ],
     );
   }

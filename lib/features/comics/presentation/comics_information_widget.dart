@@ -66,22 +66,32 @@ class InformationWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             spacing: spacingValue,
             children: [
-              Column(
-                children: [
-                  Icon(Icons.favorite, size: iconSize),
-                  Text(currentEpisodeLikesCnt),
-                ],
+              IconWithLabelButton(
+                icon: Icons.favorite,
+                size: iconSize,
+                label: currentEpisodeLikesCnt,
               ),
-              Column(
-                children: [
-                  Icon(Icons.comment, size: iconSize),
-                  Text(currentEpisodeCommentsCnt),
-                ],
+              IconWithLabelButton(
+                icon: Icons.comment,
+                size: iconSize,
+                label: currentEpisodeCommentsCnt,
               ),
-              Icon(Icons.list_alt, size: iconSize),
-              Icon(Icons.local_pizza, size: iconSize),
-              Icon(Icons.share, size: iconSize),
-              Icon(Icons.more_vert, size: iconSize),
+              IconWithLabelButton(
+                icon: Icons.list_alt,
+                size: iconSize,
+              ),
+              IconWithLabelButton(
+                icon: Icons.local_pizza,
+                size: iconSize,
+              ),
+              IconWithLabelButton(
+                icon: Icons.share,
+                size: iconSize,
+              ),
+              IconWithLabelButton(
+                icon: Icons.more_vert,
+                size: iconSize,
+              ),
             ],
           ),
           Visibility(
@@ -90,6 +100,34 @@ class InformationWidget extends StatelessWidget {
                 
               ],)),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class IconWithLabelButton extends StatelessWidget {
+  const IconWithLabelButton({
+    super.key,
+    required this.icon,
+    required this.size,
+    this.label = '',
+    this.onPressed,
+  });
+
+  final IconData icon;
+  final double size;
+  final String label;
+  final Function()? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Column(
+        children: [
+          Icon(icon, size: size),
+          Text(label),
         ],
       ),
     );
