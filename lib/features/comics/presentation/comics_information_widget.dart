@@ -1,3 +1,4 @@
+import 'package:comic_short_forms/features/comics/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/presentation/widgets/icon_with_label_button.dart';
@@ -8,12 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// 좋아요, 댓글, 작품 정보 등 표시
 /// 터치로 show/hide 토글
 class InformationWidget extends ConsumerWidget {
-  const InformationWidget({super.key, required this.artworks});
-
-  final List<Artwork> artworks;
+  const InformationWidget({super.key,});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final List<Artwork> artworks = ref.watch(comicsShortsProvider).requireValue;
     const iconSize = 36.0;
     const spacingValue = 8.0;
     const mockUpImageSrc =

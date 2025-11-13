@@ -1,17 +1,18 @@
+import 'package:comic_short_forms/features/comics/comics_shorts_notifier.dart';
+import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ArtworkPageWidget extends StatelessWidget {
   const ArtworkPageWidget({
     super.key,
     required this.artwork,
-    required this.currentPage,
     this.onEpisodeChanged,
   });
 
   final Artwork artwork;
-  final String currentPage;
   final void Function(int)? onEpisodeChanged;
 
   @override
@@ -29,20 +30,25 @@ class ArtworkPageWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         // 4. 에피소드(화) 페이지인 경우
         final episode = episodes[index];
-        return _EpisodePage(episode: episode, currentPage: currentPage,);
+        return _EpisodePage(episode: episode);
       },
     );
   }
 }
 
 // 수평 PageView의 "에피소드(화)" 페이지
-class _EpisodePage extends StatelessWidget {
-  const _EpisodePage({required this.episode, required this.currentPage});
+class _EpisodePage extends ConsumerWidget {
+  const _EpisodePage({required this.episode});
   final Episode episode;
-  final String currentPage;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final artworks = ref.watch(comicsShortsProvider).requireValue;
+    final uiProvider = comicsShortsUiProvider(artworks);
+    final currentPage = ref.watch(
+      uiProvider.select((value) => value.currentPage),
+    );
+
     return Column(
       children: [
         // (임시) 화 정보

@@ -1,3 +1,4 @@
+import 'package:comic_short_forms/features/comics/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/presentation/artwork_page_widget.dart';
@@ -9,42 +10,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// 만화를 표시하는 [ShortsFormWidget]
 /// 기타 정보를 표시하는 [InformationWidget]
 class ComicsShortsWidget extends ConsumerWidget {
-  final List<Artwork> artworks;
-  const ComicsShortsWidget({super.key, required this.artworks});
+  const ComicsShortsWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final artworks = ref.watch(comicsShortsProvider).requireValue;
     final uiProvider = comicsShortsUiProvider(artworks);
-
-    final uiState = ref.watch(uiProvider);
+    final isInfoVisible = ref.watch(
+      uiProvider.select((value) => value.isInfoVisible),
+    );
     final uiNotifier = ref.read(uiProvider.notifier);
 
     if (artworks.isEmpty) return SizedBox();
     return Stack(
       fit: StackFit.expand,
       children: [
-        ShortsFormWidget(
-          artworks: artworks,
-          currentPage: uiState.currentPage,
-          onArtworkChanged: uiNotifier.onArtworkChanged,
-          onEpisodeChanged: uiNotifier.onEpisodeChanged,
-        ),
+        ShortsFormWidget(),
         HandlePageInteractionWidget(
           handleNextPage: uiNotifier.handleNextPage,
           handlePrevPage: uiNotifier.handlePrevPage,
         ),
-        Visibility(
-          visible: uiState.isInfoVisible,
-          child: InformationWidget(artworks: artworks),
-        ),
+        Visibility(visible: isInfoVisible, child: InformationWidget()),
         ShortsFormInteractionWidget(
-          toggleInfoVisibility: uiNotifier.toggleInfoVisibility,
+          toggleInfoVisibility: uiNotifier.onToggleInfoVisibility,
         ),
-        if (uiState.endedArtwork != null)
-          Visibility(
-            visible: uiState.isEnd,
-            child: _ArtworkInfoPage(artwork: uiState.endedArtwork!),
-          ),
+        // 다음화보기 위젯
+        // if (uiState.endedArtwork != null)
+        //   Visibility(
+        //     visible: uiState.isEnd,
+        //     child: _ArtworkInfoPage(artwork: uiState.endedArtwork!),
+        //   ),
       ],
     );
   }
@@ -142,33 +137,26 @@ class HandlePageInteractionWidget extends StatelessWidget {
 /// 가로 방향 스크롤 : 다음화
 ///
 /// 순수 이미지만 표시하는 위젯
-class ShortsFormWidget extends StatelessWidget {
-  final List<Artwork> artworks;
-  const ShortsFormWidget({
-    super.key,
-    required this.artworks,
-    required this.currentPage,
-    this.onArtworkChanged,
-    this.onEpisodeChanged,
-  });
-  final void Function(int)? onArtworkChanged;
-  final void Function(int)? onEpisodeChanged;
-  final String currentPage;
+class ShortsFormWidget extends ConsumerWidget {
+  const ShortsFormWidget({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final artworks = ref.watch(comicsShortsProvider).requireValue;
+    final uiProvider = comicsShortsUiProvider(artworks);
+    final uiNotifier = ref.read(uiProvider.notifier);
+
     return SizedBox(
       child: PageView.builder(
         itemCount: artworks.length,
         scrollDirection: Axis.vertical,
-        onPageChanged: onArtworkChanged,
+        onPageChanged: uiNotifier.onArtworkChanged,
         itemBuilder: (context, index) {
           final artwork = artworks[index];
           // 3. 수평 방향 Carousel을 가진 위젯
           return ArtworkPageWidget(
             artwork: artwork,
-            onEpisodeChanged: onEpisodeChanged,
-            currentPage: currentPage,
+            onEpisodeChanged: uiNotifier.onEpisodeChanged,
           );
         },
       ),

@@ -13,7 +13,7 @@ class ComicsShortsScreen extends ConsumerWidget {
 
     return artworksState.when(
       data: (artworks) {
-        return ComicsShortsWidget(artworks: artworks);
+        return ComicsShortsWidget();
       },
       loading: () {
         return const Scaffold(
