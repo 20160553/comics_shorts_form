@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// 좋아요, 댓글, 작품 정보 등 표시
 /// 터치로 show/hide 토글
 class InformationWidget extends ConsumerWidget {
-  const InformationWidget({super.key,});
+  const InformationWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,11 +28,12 @@ class InformationWidget extends ConsumerWidget {
     );
     final uiNotifier = ref.read(uiProivder.notifier);
 
-    if (currentArtwork == null) {
+    if (currentArtwork == null || currentEpisode == null) {
       return Center(child: Text('Something wrong!'));
     }
-    final currentEpisodeLikesCnt = '${currentEpisode?.likesCnt ?? 0}';
-    final currentEpisodeCommentsCnt = '${currentEpisode?.commentsCnt ?? 0}';
+    final currentEpisodeDidLike = currentEpisode.didLike;
+    final currentEpisodeLikesCnt = '${currentEpisode.likesCnt}';
+    final currentEpisodeCommentsCnt = '${currentEpisode.commentsCnt}';
     final isCommentOpend = ref.watch(
       uiProivder.select((value) => value.isCommentOpend),
     );
@@ -76,9 +77,12 @@ class InformationWidget extends ConsumerWidget {
             spacing: spacingValue,
             children: [
               IconWithLabelButton(
-                icon: Icons.favorite,
+                icon: !currentEpisodeDidLike
+                    ? Icons.favorite_outline
+                    : Icons.favorite,
                 size: iconSize,
                 label: currentEpisodeLikesCnt,
+                onPressed: uiNotifier.onToggleLikeEpisode,
               ),
               IconWithLabelButton(
                 icon: Icons.comment,
@@ -94,11 +98,13 @@ class InformationWidget extends ConsumerWidget {
           ),
           Visibility(
             visible: isCommentOpend,
-            child: Expanded(child: Container(
-              color: Colors.amber,
-              child: Column(children: [
+            child: Expanded(
+              child: Container(
+                color: Colors.amber,
+                child: Column(children: [
                 ],),
-            )),
+              ),
+            ),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
+import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final comicsShortsUiProvider = StateNotifierProvider.autoDispose
@@ -66,5 +67,55 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
 
   void onToggleCommentLayout() {
     state = state.copyWith(isCommentOpend: !state.isCommentOpend);
+  }
+
+  /// 특정 화 좋아요 기능
+  ///
+  /// 로그아웃된 경우, currentArtwork or currentEpisode가 null일 경우 함수 종료
+  void onToggleLikeEpisode() {
+    // todo 로그인 / 로그아웃 로직 분리
+    // 로그아웃된 경우 return
+
+    // 현재 에피소드 like 토글 UI 갱신 로직
+    if (state.currentArtwork == null || state.currentEpisode == null) return;
+
+    final originalState = state;
+    final newEpisode = state.currentEpisode!.copyWith(
+      didLike: !state.currentEpisode!.didLike,
+      likesCnt: state.currentEpisode!.didLike
+          ? state.currentEpisode!.likesCnt - 1
+          : state.currentEpisode!.likesCnt + 1,
+    );
+
+    final newEpisodes = List<Episode>.from(state.currentArtwork!.episodes);
+    newEpisodes[state.currentEpisodeIdx] = newEpisode;
+
+    final newArtwork = state.currentArtwork!.copyWith(episodes: newEpisodes);
+
+    final newArtworks = List<Artwork>.from(state.artworks);
+    newArtworks[state.currentArtworkIdx] = newArtwork;
+
+    state = state.copyWith(artworks: newArtworks);
+
+    //todo toggleLike 비즈니스 로직 (Repository)
+    _callToggleLikeApi(originalState);
+  }
+
+  void _callToggleLikeApi(ComicsShortsUiState originalState) async {
+    try {
+      // // Repository의 비즈니스 로직 호출
+      // await _repository.toggleEpisodeLike(
+      //   artworkId: originalState.currentArtwork!.id,
+      //   episodeId: originalState.currentEpisode!.id,
+      // );
+      // (성공) 아무것도 할 필요 없음 (UI는 이미 갱신됨)
+    } catch (e) {
+      // (⭐ 실패) API 호출이 실패하면,
+      // 이전에 백업해둔 'originalState'로 즉시 롤백
+      state = originalState;
+
+      // (선택적) 사용자에게 에러 알림
+      // showSnackBar("좋아요 처리에 실패했습니다.");
+    }
   }
 }

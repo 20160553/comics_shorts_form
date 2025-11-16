@@ -9,9 +9,9 @@ abstract class Episode with _$Episode {
     required int id,
     required String title,
     @Default([]) List<String> imageUrls,
-    @Default(false) didLike,
-    @Default(0) likesCnt,
-    @Default(0) commentsCnt
+    @Default(false) bool didLike,
+    @Default(0) int likesCnt,
+    @Default(0) int commentsCnt
   }) = _Episode;
 
   factory Episode.fromJson(Map<String, dynamic> json) =>
