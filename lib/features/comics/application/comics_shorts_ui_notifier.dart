@@ -46,23 +46,64 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
     // 다음 페이지 없는 경우
     if ((state.currentEpisode?.imageUrls.length ?? -1) <=
         state.currentPageIdx + 1) {
+      state = state.copyWith(isEnd: true);
       return;
     }
-    state = state.copyWith(currentPageIdx: state.currentPageIdx + 1);
+    state = state.copyWith(
+      currentPageIdx: state.currentPageIdx + 1,
+      isEnd: false,
+    );
   }
 
   void handlePrevPage() {
     // 이전 페이지 없는 경우
-    if (state.currentPageIdx - 1 < 0) return;
-    state = state.copyWith(currentPageIdx: state.currentPageIdx - 1);
+    if (state.currentPageIdx - 1 < 0) {
+      state = state.copyWith(isEnd: true);
+      return;
+    }
+    state = state.copyWith(
+      currentPageIdx: state.currentPageIdx - 1,
+      isEnd: false,
+    );
   }
 
-  void onChangeEpisodeImage(bool isEnd, Artwork artwork) {
-    state = state.copyWith(isEnd: isEnd, endedArtwork: artwork);
+  void handleNextEpisode() {
+    if ((state.currentArtwork?.episodes.length ?? -1) <=
+        state.currentEpisodeIdx + 1) {
+      return;
+    }
+    state = state.copyWith(
+      currentEpisodeIdx: state.currentEpisodeIdx + 1,
+      isEnd: false,
+      isCommentOpend: false,
+      isInfoVisible: false,
+      isDescriptionExpanded: false,
+    );
+  }
+
+  void handlePrevEpisode() {
+    // 이전 페이지 없는 경우
+    if (state.currentEpisodeIdx - 1 < 0) return;
+    state = state.copyWith(
+      currentEpisodeIdx: state.currentEpisodeIdx - 1,
+      isEnd: false,
+      isCommentOpend: false,
+      isInfoVisible: false,
+      isDescriptionExpanded: false,
+    );
+  }
+
+  void onCloseArtworkInfo() {
+    state = state.copyWith(isEnd: false);
   }
 
   void onToggleInfoVisibility() {
-    state = state.copyWith(isInfoVisible: !state.isInfoVisible);
+    state = state.copyWith(
+      isInfoVisible: !state.isInfoVisible,
+      isEnd: false,
+      isCommentOpend: false,
+      isDescriptionExpanded: false,
+    );
   }
 
   void onToggleDescriptionExpanded() {

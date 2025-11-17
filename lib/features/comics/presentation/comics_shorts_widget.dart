@@ -1,3 +1,4 @@
+import 'package:comic_short_forms/core/constants/num_constant.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
@@ -19,6 +20,7 @@ class ComicsShortsWidget extends ConsumerWidget {
     final isInfoVisible = ref.watch(
       uiProvider.select((value) => value.isInfoVisible),
     );
+    final isEnd = ref.watch(uiProvider.select((value) => value.isEnd));
     final uiNotifier = ref.read(uiProvider.notifier);
 
     if (artworks.isEmpty) return SizedBox();
@@ -35,23 +37,29 @@ class ComicsShortsWidget extends ConsumerWidget {
           toggleInfoVisibility: uiNotifier.onToggleInfoVisibility,
         ),
         // 다음화보기 위젯
-        // if (uiState.endedArtwork != null)
-        //   Visibility(
-        //     visible: uiState.isEnd,
-        //     child: _ArtworkInfoPage(artwork: uiState.endedArtwork!),
-        //   ),
+        Visibility(visible: isEnd, child: _ArtworkInfoPage()),
       ],
     );
   }
 }
 
 // 수평 PageView의 "마지막" 페이지 (작품 정보)
-class _ArtworkInfoPage extends StatelessWidget {
-  final Artwork artwork;
-  const _ArtworkInfoPage({required this.artwork});
+class _ArtworkInfoPage extends ConsumerWidget {
+  const _ArtworkInfoPage();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<Artwork> artworks = ref.read(comicsShortsProvider).requireValue;
+    final uiProvider = comicsShortsUiProvider(artworks);
+    final currentArtwork = ref.watch(
+      uiProvider.select((value) => value.currentArtwork),
+    );
+    final currentEpisodeIdx = ref.watch(
+      uiProvider.select((value) => value.currentEpisodeIdx),
+    );
+    final uiNotifier = ref.read(uiProvider.notifier);
+
+    if (currentArtwork == null) return const SizedBox();
     return Container(
       color: Colors.grey[800],
       child: Center(
@@ -59,19 +67,51 @@ class _ArtworkInfoPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "작품: ${artwork.title}",
+              "작품: ${currentArtwork.title}",
               style: const TextStyle(fontSize: 24, color: Colors.white),
             ),
             Text(
-              "작가: ${artwork.author}",
+              "작가: ${currentArtwork.author.nickname}",
               style: const TextStyle(fontSize: 18, color: Colors.white70),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: 첫 화부터 다시 보기 등
-              },
-              child: const Text("첫 화부터 다시보기"),
+            if (currentEpisodeIdx >= currentArtwork.episodes.length)
+              ElevatedButton(
+                onPressed: () {
+                  // TODO: 첫 화부터 다시 보기 등
+                },
+                child: const Text("첫 화부터 다시보기"),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: smallSpacing,
+                children: [
+                  ElevatedButton(
+                    onPressed: uiNotifier.handlePrevEpisode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: currentEpisodeIdx - 1 < 0
+                          ? Colors.grey
+                          : null,
+                    ),
+                    child: const Text("이전화"),
+                  ),
+                  ElevatedButton(
+                    onPressed: uiNotifier.handleNextEpisode,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          currentArtwork.episodes.length <=
+                              currentEpisodeIdx + 1
+                          ? Colors.grey
+                          : null,
+                    ),
+                    child: const Text("다음화"),
+                  ),
+                ],
+              ),
+            TextButton(
+              onPressed: uiNotifier.onCloseArtworkInfo,
+              child: Text('닫기'),
             ),
           ],
         ),

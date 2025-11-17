@@ -18,8 +18,8 @@ abstract class ComicsShortsUiState with _$ComicsShortsUiState {
     bool isDescriptionExpanded,
     @Default(false)
     bool isCommentOpend,
-    required bool isEnd,
-    @Default(null) Artwork? endedArtwork,
+    @Default(false)
+    bool isEnd,
   }) = _ComicsShortsUiState;
 
   // 초기 상태
@@ -31,7 +31,6 @@ abstract class ComicsShortsUiState with _$ComicsShortsUiState {
       currentPageIdx: 0,
       isInfoVisible: false,
       isEnd: false,
-      endedArtwork: null,
     );
   }
 

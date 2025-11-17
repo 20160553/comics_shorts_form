@@ -1,0 +1,1 @@
+const smallSpacing = 8.0;
