@@ -1,4 +1,4 @@
-import 'package:comic_short_forms/features/comics/comics_shorts_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/presentation/comics_shorts_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

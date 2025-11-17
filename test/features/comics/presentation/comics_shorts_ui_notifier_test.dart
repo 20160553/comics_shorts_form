@@ -1,4 +1,4 @@
-import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 

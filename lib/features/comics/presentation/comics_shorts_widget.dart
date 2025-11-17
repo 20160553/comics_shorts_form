@@ -1,5 +1,5 @@
-import 'package:comic_short_forms/features/comics/comics_shorts_notifier.dart';
-import 'package:comic_short_forms/features/comics/comics_shorts_ui_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/comics_shorts_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/presentation/artwork_page_widget.dart';
 import 'package:comic_short_forms/features/comics/presentation/comics_information_widget.dart';

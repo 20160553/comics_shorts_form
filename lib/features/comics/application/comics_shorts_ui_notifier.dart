@@ -1,6 +1,9 @@
+import 'package:comic_short_forms/core/locator/service_locator.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
 import 'package:comic_short_forms/features/comics/domain/episode.dart';
+import 'package:comic_short_forms/features/comics/domain/i_like_repository.dart';
+import 'package:comic_short_forms/features/comics/infrastructure/mock_like_repository_impl.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final comicsShortsUiProvider = StateNotifierProvider.autoDispose
@@ -14,6 +17,7 @@ final comicsShortsUiProvider = StateNotifierProvider.autoDispose
 class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
   ComicsShortsUiNotifier(List<Artwork> artworks)
     : super(ComicsShortsUiState.initial(artworks));
+  final ILikeRepository _likeRepository = locator<MockLikeRepositoryImpl>();
 
   /// 정보창 토글 메서드
   void toggleInfoVisibility() {
@@ -104,17 +108,14 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
   void _callToggleLikeApi(ComicsShortsUiState originalState) async {
     try {
       // // Repository의 비즈니스 로직 호출
-      // await _repository.toggleEpisodeLike(
-      //   artworkId: originalState.currentArtwork!.id,
-      //   episodeId: originalState.currentEpisode!.id,
+      // await _likeRepository.toggleEpisodeLike(
+      //   userUid,
+      //   originalState.currentEpisode!.id,
       // );
-      // (성공) 아무것도 할 필요 없음 (UI는 이미 갱신됨)
     } catch (e) {
-      // (⭐ 실패) API 호출이 실패하면,
-      // 이전에 백업해둔 'originalState'로 즉시 롤백
       state = originalState;
 
-      // (선택적) 사용자에게 에러 알림
+      // todo 에러 알림
       // showSnackBar("좋아요 처리에 실패했습니다.");
     }
   }
