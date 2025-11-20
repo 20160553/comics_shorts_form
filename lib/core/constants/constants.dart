@@ -1,0 +1,1 @@
+const pageViewAnimationDuration = Duration(milliseconds: 300);

@@ -1,11 +1,13 @@
+import 'package:comic_short_forms/core/constants/constants.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/episode.dart';
+import 'package:comic_short_forms/features/comics/presentation/providers/page_controller_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ArtworkPageWidget extends StatelessWidget {
+class ArtworkPageWidget extends ConsumerWidget {
   const ArtworkPageWidget({
     super.key,
     required this.artwork,
@@ -16,19 +18,34 @@ class ArtworkPageWidget extends StatelessWidget {
   final void Function(int)? onEpisodeChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final episodes = artwork.episodes;
-
-    // 요구사항 4: (에피소드 개수 + 마지막 작품 정보 페이지 1개)
+    final uiProvider = comicsShortsUiProvider(
+      ref.read(comicsShortsProvider).requireValue,
+    );
+    final pageController = ref.read(episodePageControllerProvider(artwork.id));
     final pageCount = episodes.length;
 
+    ref.listen(uiProvider, (previous, next) {
+      if (next.currentArtwork == null) return;
+      if (next.currentArtwork!.id == artwork.id &&
+          previous?.currentEpisodeIdx != next.currentEpisodeIdx) {
+        if (pageController.hasClients) {
+          pageController.animateToPage(
+            next.currentEpisodeIdx,
+            duration: pageViewAnimationDuration,
+            curve: Curves.easeInOut,
+          );
+        }
+      }
+    });
+
     return PageView.builder(
-      // 수평 방향 (기본값)
       scrollDirection: Axis.horizontal,
+      controller: pageController,
       itemCount: pageCount,
       onPageChanged: onEpisodeChanged,
       itemBuilder: (context, index) {
-        // 4. 에피소드(화) 페이지인 경우
         final episode = episodes[index];
         return _EpisodePage(episode: episode);
       },
