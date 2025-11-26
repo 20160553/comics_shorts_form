@@ -1,9 +1,11 @@
 import 'package:comic_short_forms/core/locator/service_locator.dart';
+import 'package:comic_short_forms/features/comics/application/reading_history_provider.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
 import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:comic_short_forms/features/comics/domain/i_like_repository.dart';
 import 'package:comic_short_forms/features/comics/infrastructure/mock_like_repository_impl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final comicsShortsUiProvider = StateNotifierProvider.autoDispose
@@ -11,18 +13,32 @@ final comicsShortsUiProvider = StateNotifierProvider.autoDispose
       ref,
       artworks,
     ) {
-      return ComicsShortsUiNotifier(artworks);
+      return ComicsShortsUiNotifier(artworks, ref);
     });
 
 class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
-  ComicsShortsUiNotifier(List<Artwork> artworks)
+  ComicsShortsUiNotifier(List<Artwork> artworks, this._ref)
     : super(ComicsShortsUiState.initial(artworks));
+
+  final Ref _ref;
   final ILikeRepository _likeRepository = locator<MockLikeRepositoryImpl>();
 
   /// 정보창 토글 메서드
   void toggleInfoVisibility() {
     state = state.copyWith(isInfoVisible: !state.isInfoVisible);
   }
+
+  // 에피소드 최근 본 페이지 저장
+  void savePage(int episodeId, int pageIdx) {
+    _ref.read(readingHistoryProvider.notifier).update((map) => {
+      ...map,
+      episodeId: pageIdx,
+    });
+  }
+
+  // 에피소드 최근 본 페이지 로드
+  int loadPage(int episodeId) =>
+      _ref.read(readingHistoryProvider).getPageIndex(episodeId);
 
   /// 작품 변경 메서드
   void onArtworkChanged(int nextIdx) {
@@ -38,7 +54,12 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
   void onEpisodeChanged(int nextIdx) {
     if (nextIdx < 0 || nextIdx >= (state.currentArtwork?.episodes.length ?? -1))
       return;
-    state = state.copyWith(currentEpisodeIdx: nextIdx, currentPageIdx: 0);
+
+    final nextEpisode = state.currentArtwork!.episodes[nextIdx];
+    state = state.copyWith(
+      currentEpisodeIdx: nextIdx,
+      currentPageIdx: loadPage(nextEpisode.id),
+    );
   }
 
   /// 다음 페이지 메서드
@@ -49,6 +70,10 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
       state = state.copyWith(isEnd: true);
       return;
     }
+    
+    // 에피소드 최근 본 페이지 저장
+    savePage(state.currentEpisode!.id , state.currentPageIdx + 1);
+
     state = state.copyWith(
       currentPageIdx: state.currentPageIdx + 1,
       isEnd: false,
@@ -61,6 +86,9 @@ class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
       state = state.copyWith(isEnd: true);
       return;
     }
+    
+    // 에피소드 최근 본 페이지 저장
+    savePage(state.currentEpisode!.id , state.currentPageIdx - 1);
     state = state.copyWith(
       currentPageIdx: state.currentPageIdx - 1,
       isEnd: false,

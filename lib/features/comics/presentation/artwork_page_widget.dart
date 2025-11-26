@@ -1,6 +1,7 @@
 import 'package:comic_short_forms/core/constants/constants.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_notifier.dart';
 import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/reading_history_provider.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/episode.dart';
 import 'package:comic_short_forms/features/comics/presentation/providers/page_controller_provider.dart';
@@ -23,15 +24,15 @@ class ArtworkPageWidget extends ConsumerWidget {
     final uiProvider = comicsShortsUiProvider(
       ref.read(comicsShortsProvider).requireValue,
     );
-    final pageController = ref.read(episodePageControllerProvider(artwork.id));
-    final pageCount = episodes.length;
+    final episodeController = ref.read(episodePageControllerProvider(artwork.id));
+    final episodeCount = episodes.length;
 
     ref.listen(uiProvider, (previous, next) {
       if (next.currentArtwork == null) return;
       if (next.currentArtwork!.id == artwork.id &&
           previous?.currentEpisodeIdx != next.currentEpisodeIdx) {
-        if (pageController.hasClients) {
-          pageController.animateToPage(
+        if (episodeController.hasClients) {
+          episodeController.animateToPage(
             next.currentEpisodeIdx,
             duration: pageViewAnimationDuration,
             curve: Curves.easeInOut,
@@ -42,33 +43,47 @@ class ArtworkPageWidget extends ConsumerWidget {
 
     return PageView.builder(
       scrollDirection: Axis.horizontal,
-      controller: pageController,
-      itemCount: pageCount,
+      controller: episodeController,
+      itemCount: episodeCount,
       onPageChanged: onEpisodeChanged,
       itemBuilder: (context, index) {
         final episode = episodes[index];
-        return _EpisodePage(episode: episode);
+        return _EpisodeWidget(artworkId: artwork.id, episode: episode);
       },
     );
   }
 }
 
-// 수평 PageView의 "에피소드(화)" 페이지
-class _EpisodePage extends ConsumerWidget {
-  const _EpisodePage({required this.episode});
+
+class _EpisodeWidget extends ConsumerWidget {
+  const _EpisodeWidget({
+    super.key, 
+    required this.artworkId, 
+    required this.episode
+  });
+  
+  final int artworkId;
   final Episode episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final artworks = ref.watch(comicsShortsProvider).requireValue;
-    final uiProvider = comicsShortsUiProvider(artworks);
-    final currentPage = ref.watch(
-      uiProvider.select((value) => value.currentPage),
-    );
+    final artworks = ref.read(comicsShortsProvider).requireValue;
+    final uiState = ref.watch(comicsShortsUiProvider(artworks));
+    final history = ref.watch(readingHistoryProvider);
+
+    int displayPageIdx = history.getPageIndex(episode.id);
+    
+    debugPrint('episodePage: $displayPageIdx');
+
+    // if (uiState.currentArtwork?.id == artworkId && 
+    //     uiState.currentEpisode?.id == episode.id) {
+    //   displayPageIdx = uiState.currentPageIdx;
+    // } else {
+      
+    // }
 
     return Column(
       children: [
-        // (임시) 화 정보
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
@@ -81,7 +96,7 @@ class _EpisodePage extends ConsumerWidget {
           ),
         ),
         Image.network(
-          currentPage,
+          episode.imageUrls.elementAtOrNull(displayPageIdx) ?? '',
           fit: BoxFit.fitWidth,
           loadingBuilder: (context, child, progress) {
             return progress == null
