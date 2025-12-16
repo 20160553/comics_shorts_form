@@ -1,4 +1,3 @@
-import 'package:comic_short_forms/core/locator/service_locator.dart';
 import 'package:comic_short_forms/features/comics/application/reading_history_provider.dart';
 import 'package:comic_short_forms/features/comics/domain/artwork.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
@@ -18,10 +17,12 @@ final comicsShortsUiProvider = StateNotifierProvider.autoDispose
 
 class ComicsShortsUiNotifier extends StateNotifier<ComicsShortsUiState> {
   ComicsShortsUiNotifier(List<Artwork> artworks, this._ref)
-    : super(ComicsShortsUiState.initial(artworks));
+    : super(ComicsShortsUiState.initial(artworks)) {
+      _likeRepository = _ref.read(mockLikeRepositoryProvider);
+    }
 
   final Ref _ref;
-  final ILikeRepository _likeRepository = locator<MockLikeRepositoryImpl>();
+  late final ILikeRepository _likeRepository;
 
   /// 정보창 토글 메서드
   void toggleInfoVisibility() {

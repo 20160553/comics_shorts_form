@@ -1,19 +1,54 @@
 import 'package:comic_short_forms/features/comics/application/comics_shorts_ui_notifier.dart';
+import 'package:comic_short_forms/features/comics/application/reading_history_provider.dart';
 import 'package:comic_short_forms/features/comics/domain/comics_shorts_ui_state.dart';
+import 'package:comic_short_forms/features/comics/domain/i_like_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../../../mocks/mock_data.dart';
 
+class MockLikeRepository extends Mock implements ILikeRepository {}
+
+final fakeReadingHistoryProvider = StateProvider<Map<int, int>>((ref) => {});
 void main() {
+
+  late MockLikeRepository mockLikeRepository;
+  late ProviderContainer container;
+
+  // 테스트 실행 전 공통 초기화 로직
+  setUp(() {
+    mockLikeRepository = MockLikeRepository();
+
+    container = ProviderContainer(
+      overrides: [
+        readingHistoryProvider.overrideWith((ref) => {})
+      ]
+    );
+
+  });
+
+  // 테스트 종료 후 정리
+  tearDown(() {
+    container.dispose();
+  });
+
+  // Notifier 가져오기 도우미 함수
+  ComicsShortsUiNotifier getNotifier() {
+    // family provider이므로 mockArtworks를 인자로 넘겨줍니다.
+    return container.read(comicsShortsUiProvider(mockArtworks).notifier);
+  }
+  
+  // State 가져오기 도우미 함수
+  ComicsShortsUiState getState() {
+    return container.read(comicsShortsUiProvider(mockArtworks));
+  }
+
   group('ComicsShortsUiNotifier Tests', () {
-    ComicsShortsUiNotifier createNotifier() {
-      return ComicsShortsUiNotifier(mockArtworks);
-    }
 
     test('초기 상태(Initial state)가 올바르게 설정되어야 한다', () {
-      final notifier = createNotifier();
-
-      final state = notifier.state;
+      final state = getState();
 
       // 초기 상태 확인
       expect(state, ComicsShortsUiState.initial(mockArtworks));
@@ -32,7 +67,7 @@ void main() {
 
     test('handleNextPage: 페이지를 올바르게 증가시키고, 마지막 페이지에서 멈춰야 한다', () {
       // Arrange
-      final notifier = createNotifier();
+      final notifier = getNotifier();
       // 초기 페이지 인덱스는 0
       expect(notifier.state.currentPageIdx, 0);
 
@@ -52,7 +87,7 @@ void main() {
 
     test('handlePrevPage: 페이지를 올바르게 감소시키고, 첫 페이지에서 멈춰야 한다', () {
       // Arrange
-      final notifier = createNotifier();
+      final notifier = getNotifier();
       // 강제로 1페이지로 이동
       notifier.handleNextPage();
       expect(notifier.state.currentPageIdx, 1);
@@ -73,7 +108,7 @@ void main() {
 
     test('onEpisodeChanged: 에피소드를 변경하고, 페이지 인덱스를 0으로 초기화해야 한다', () {
       // Arrange
-      final notifier = createNotifier();
+      final notifier = getNotifier();;
       // 1페이지로 이동
       notifier.handleNextPage();
       expect(notifier.state.currentPageIdx, 1); // 현재 1페이지
@@ -91,7 +126,7 @@ void main() {
 
     test('onArtworkChanged: 작품을 변경하고, 에피소드와 페이지 인덱스를 0으로 초기화해야 한다', () {
       // Arrange
-      final notifier = createNotifier();
+      final notifier = getNotifier();
       // 2화, 1페이지로 이동
       notifier.onEpisodeChanged(1);
       // (2화는 이미지가 1개 뿐이라 handleNextPage() 호출해도 0에 머무름)
@@ -112,7 +147,7 @@ void main() {
 
     test('toggleInfoVisibility: 정보창 표시 상태를 토글(toggle)해야 한다', () {
       // Arrange
-      final notifier = createNotifier();
+      final notifier = getNotifier();
       expect(notifier.state.isInfoVisible, false); // 초기값 false
 
       // Act (1)
