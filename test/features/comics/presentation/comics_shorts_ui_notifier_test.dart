@@ -13,7 +13,6 @@ class MockLikeRepository extends Mock implements ILikeRepository {}
 
 final fakeReadingHistoryProvider = StateProvider<Map<int, int>>((ref) => {});
 void main() {
-
   late MockLikeRepository mockLikeRepository;
   late ProviderContainer container;
 
@@ -22,11 +21,8 @@ void main() {
     mockLikeRepository = MockLikeRepository();
 
     container = ProviderContainer(
-      overrides: [
-        readingHistoryProvider.overrideWith((ref) => {})
-      ]
+      overrides: [readingHistoryProvider.overrideWith((ref) => {})],
     );
-
   });
 
   // 테스트 종료 후 정리
@@ -39,14 +35,13 @@ void main() {
     // family provider이므로 mockArtworks를 인자로 넘겨줍니다.
     return container.read(comicsShortsUiProvider(mockArtworks).notifier);
   }
-  
+
   // State 가져오기 도우미 함수
   ComicsShortsUiState getState() {
     return container.read(comicsShortsUiProvider(mockArtworks));
   }
 
   group('ComicsShortsUiNotifier Tests', () {
-
     test('초기 상태(Initial state)가 올바르게 설정되어야 한다', () {
       final state = getState();
 
@@ -58,6 +53,9 @@ void main() {
       expect(state.currentEpisodeIdx, 0);
       expect(state.currentPageIdx, 0);
       expect(state.isInfoVisible, false);
+      expect(state.isDescriptionExpanded, false);
+      expect(state.isCommentOpend, false);
+      expect(state.isEnd, false);
 
       // 3. Getter가 첫 번째 데이터를 올바르게 반환하는지 확인
       expect(state.currentArtwork, mockArtwork1);
@@ -108,7 +106,8 @@ void main() {
 
     test('onEpisodeChanged: 에피소드를 변경하고, 페이지 인덱스를 0으로 초기화해야 한다', () {
       // Arrange
-      final notifier = getNotifier();;
+      final notifier = getNotifier();
+      ;
       // 1페이지로 이동
       notifier.handleNextPage();
       expect(notifier.state.currentPageIdx, 1); // 현재 1페이지
@@ -119,7 +118,7 @@ void main() {
       // Assert
       expect(notifier.state.currentEpisodeIdx, 1);
       // (⭐ 핵심) currentPageIdx가 0으로 초기화됨
-      expect(notifier.state.currentPageIdx, 0); 
+      expect(notifier.state.currentPageIdx, 0);
       expect(notifier.state.currentEpisode, mockArtwork1.episodes[1]);
       expect(notifier.state.currentPage, "b1.jpg");
     });
@@ -160,5 +159,52 @@ void main() {
       // Assert (2)
       expect(notifier.state.isInfoVisible, false);
     });
+  });
+
+  group('History 테스트', () {
+    test('savePage: 페이지 정보를 저장하면 Provider의 상태가 업데이트되어야 한다', () {
+      final notifier = getNotifier();
+      final episodeId = 101;
+      final pageIdx = 5;
+
+      final historyMap = container.read(readingHistoryProvider);
+      expect(historyMap.containsKey(episodeId), false);
+      expect(historyMap[episodeId], null);
+
+      notifier.savePage(episodeId, pageIdx);
+
+      final historyMap2 = container.read(readingHistoryProvider);
+      expect(historyMap2.containsKey(episodeId), true);
+      expect(historyMap2[episodeId], pageIdx);
+    });
+  });
+
+  test('loadPage: 페이지 정보를 저장하면 Provider의 상태가 업데이트되어야 한다', () {
+    final notifier = getNotifier();
+    final episodeId = 202;
+    final savedPageIdx = 3;
+
+    // 데이터 조작
+    container.read(readingHistoryProvider.notifier).state = {
+      episodeId: savedPageIdx,
+      999: 10, // 다른 데이터
+    };
+    final result = notifier.loadPage(episodeId);
+
+    // Assert
+    expect(result, savedPageIdx);
+  });
+
+  test('savePage: 페이지 정보를 덮어쓸 수 있다.', () {
+    final notifier = getNotifier();
+    final episodeId = 101;
+
+    // 먼저 저장
+    notifier.savePage(episodeId, 3);
+    expect(container.read(readingHistoryProvider)[episodeId], 3);
+
+    // 덮어쓰기
+    notifier.savePage(episodeId, 2);
+    expect(container.read(readingHistoryProvider)[episodeId], 2);
   });
 }
