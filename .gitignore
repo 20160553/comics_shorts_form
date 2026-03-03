@@ -119,3 +119,6 @@ pubspec.lock
 
 # FVM Version Cache
 .fvm/
+
+GEMINI.md
+*.geminiignore
